@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J1939 Signal Generator & Encoder/Decoder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #1a1a2e;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid #0f3460;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+            border-bottom: 3px solid #e94560;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .logo i {
+            font-size: 2.2rem;
+            color: #e94560;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 5px;
+            color: #bbbbbb;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #16213e;
+            border-bottom: 2px solid #0f3460;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 16px 20px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #888888;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tab-button:hover {
+            background: #1a1a2e;
+            color: #ffffff;
+        }
+
+        .tab-button.active {
+            background: #0f3460;
+            color: #ffffff;
+            border-bottom: 3px solid #e94560;
+            font-weight: 600;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 25px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid #1a1a2e;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            color: #e94560;
+            margin-bottom: 15px;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card p {
+            color: #cccccc;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* Configuration Sections */
+        .config-section {
+            margin-top: 20px;
+        }
+
+        .config-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .config-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .config-item label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        select, input {
+            padding: 12px 15px;
+            background: #1a1a2e;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #ffffff;
+            transition: all 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #e94560;
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.3);
+        }
+
+        .hint {
+            font-size: 0.85rem;
+            color: #888888;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* SPN Details */
+        .spn-details {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #e94560;
+        }
+
+        .spn-details h3 {
+            color: #e94560;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .spn-details-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .spn-detail-item {
+            padding: 12px;
+            background: #16213e;
+            border-radius: 6px;
+            border: 1px solid #0f3460;
+        }
+
+        .spn-detail-item strong {
+            color: #ffffff;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.95rem;
+        }
+
+        .spn-detail-item span {
+            color: #cccccc;
+            font-family: monospace;
+            font-size: 0.9rem;
+            display: block;
+            margin: 3px 0;
+        }
+
+        /* Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e94560 0%, #d32f4a 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #d32f4a 0%, #b71c37 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-secondary {
+            background: #1a1a2e;
+            color: #cccccc;
+            border: 2px solid #0f3460;
+        }
+
+        .btn-secondary:hover {
+            background: #0f3460;
+            color: white;
+            border-color: #e94560;
+        }
+
+        /* Encoding Panel */
+        .encoding-panel {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+            border: 2px solid #0f3460;
+        }
+
+        .encoding-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0f3460;
+            padding-bottom: 15px;
+        }
+
+        .encoding-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: #888888;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .encoding-tab:hover {
+            background: #16213e;
+            color: #ffffff;
+        }
+
+        .encoding-tab.active {
+            background: #e94560;
+            color: white;
+        }
+
+        .encoding-content {
+            display: none;
+        }
+
+        .encoding-content.active {
+            display: block;
+        }
+
+        .encoding-step {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #16213e;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+        }
+
+        .encoding-step h4, .encoding-step h5 {
+            color: #e94560;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .encoding-step p {
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #cccccc;
+            line-height: 1.5;
+        }
+
+        .byte-display {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .byte {
+            background: #1a1a2e;
+            padding: 12px;
+            text-align: center;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: #ffffff;
+            border: 2px solid #0f3460;
+            font-size: 1.1rem;
+        }
+
+        .byte.highlighted {
+            background: #e94560;
+            color: white;
+            border-color: #e94560;
+            transform: scale(1.05);
+        }
+
+        .byte-note {
+            font-size: 0.9rem;
+            color: #888888;
+            font-style: italic;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Help Section */
+        .help-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .help-section {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #e94560;
+        }
+
+        .help-section h3 {
+            color: #e94560;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .help-section ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .help-section li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #cccccc;
+        }
+
+        .help-section li:before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #e94560;
+        }
+
+        .formula-box {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #0f3460;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            color: #ffffff;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: #e94560;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #0f3460;
+            color: #cccccc;
+        }
+
+        tr:hover {
+            background: #1a1a2e;
+        }
+
+        /* Footer */
+        .footer {
+            background: #16213e;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-top: 2px solid #0f3460;
+            margin-top: 30px;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer p {
+            margin: 8px 0;
+            color: #888888;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .config-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .byte-display {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .logo h1 {
+                font-size: 1.4rem;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-button {
+                padding: 14px;
+                justify-content: flex-start;
+            }
+            
+            .tab-content {
+                padding: 15px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .byte-display {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .byte-display {
+                grid-template-columns: 1fr;
+            }
+            
+            .help-section table {
+                font-size: 0.85rem;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #16213e;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e94560;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d32f4a;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-microchip"></i>
+                <h1>J1939 Signal Generator & Encoder/Decoder</h1>
+            </div>
+            <p class="subtitle">Convert physical values to J1939 CAN frames and vice versa</p>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('encoder-decoder')">
+                <i class="fas fa-exchange-alt"></i> Encoder/Decoder
+            </button>
+            <button class="tab-button" onclick="switchTab('help')">
+                <i class="fas fa-question-circle"></i> Help
+            </button>
+        </div>
+
+        <!-- Encoder/Decoder Tab -->
+        <div id="encoder-decoder" class="tab-content active">
+            <div class="card">
+                <h2><i class="fas fa-exchange-alt"></i> J1939 Encoder & Decoder</h2>
+                <p>Convert physical values to J1939 CAN frames and vice versa. Understand the complete encoding/decoding process step-by-step.</p>
+                
+                <!-- Signal Selection -->
+                <div class="config-section">
+                    <h3>1. Select Signal Type</h3>
+                    <div class="config-row">
+                        <div class="config-item">
+                            <label for="signal-type"><i class="fas fa-signal"></i> Signal Type</label>
+                            <select id="signal-type" onchange="loadSignalDetails()">
+                                <option value="">Select Signal...</option>
+                                <option value="engine_speed">Engine Speed (RPM)</option>
+                                <option value="vehicle_speed">Vehicle Speed (km/h)</option>
+                                <option value="cab_temperature">Cab Temperature (°C)</option>
+                                <option value="driver_torque">Driver Torque (%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Signal Info -->
+                    <div id="signal-info" class="spn-details" style="display: none;">
+                        <h3>Signal Information</h3>
+                        <div id="signal-info-content"></div>
+                    </div>
+                </div>
+
+                <!-- Encoder Section -->
+                <div class="encoding-panel">
+                    <div class="encoding-tabs">
+                        <button class="encoding-tab active" onclick="switchEncodingTab('encoder')">
+                            <i class="fas fa-arrow-right"></i> Encoding (Physical → CAN)
+                        </button>
+                        <button class="encoding-tab" onclick="switchEncodingTab('decoder')">
+                            <i class="fas fa-arrow-left"></i> Decoding (CAN → Physical)
+                        </button>
+                    </div>
+
+                    <!-- Encoder Content -->
+                    <div id="encoder-content" class="encoding-content active">
+                        <h3>Physical Value to J1939 Frame</h3>
+                        <div class="config-row">
+                            <div class="config-item">
+                                <label for="physical-value"><i class="fas fa-tachometer-alt"></i> Physical Value</label>
+                                <input type="number" id="physical-value" placeholder="Enter value..." step="any">
+                                <div class="hint" id="physical-range"></div>
+                            </div>
+                            <div class="config-item">
+                                <button class="btn btn-primary" onclick="encodeValue()" style="margin-top: 25px;">
+                                    <i class="fas fa-calculator"></i> Encode
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Encoding Steps -->
+                        <div id="encoding-steps" style="display: none;">
+                            <h4>Encoding Steps:</h4>
+                            <div class="encoding-step">
+                                <h5>Step 1: Physical to Raw Value</h5>
+                                <p>Raw = (Physical - Offset) / Resolution</p>
+                                <p id="step1-details"></p>
+                            </div>
+                            <div class="encoding-step">
+                                <h5>Step 2: Raw Value to Binary</h5>
+                                <p id="step2-details"></p>
+                            </div>
+                            <div class="encoding-step">
+                                <h5>Step 3: Binary to Hex</h5>
+                                <p id="step3-details"></p>
+                            </div>
+                            <div class="encoding-step">
+                                <h5>Step 4: Byte Placement in CAN Frame</h5>
+                                <div class="byte-display" id="byte-placement"></div>
+                                <p id="byte-note"></p>
+                            </div>
+                            <div class="encoding-step">
+                                <h5>Step 5: Final CAN Frame</h5>
+                                <p><strong>CAN ID:</strong> <span id="final-can-id"></span></p>
+                                <p><strong>Data Bytes:</strong> <span id="final-data"></span></p>
+                                <p><strong>Full Frame:</strong> <span id="final-frame"></span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Decoder Content -->
+                    <div id="decoder-content" class="encoding-content">
+                        <h3>J1939 Frame to Physical Value</h3>
+                        <div class="config-row">
+                            <div class="config-item">
+                                <label for="can-data"><i class="fas fa-code"></i> CAN Data (8 bytes hex)</label>
+                                <input type="text" id="can-data" placeholder="0000000000000000" 
+                                       pattern="[0-9A-Fa-f]{16}" maxlength="16">
+                                <div class="hint">Enter 16 hexadecimal characters (8 bytes)</div>
+                            </div>
+                            <div class="config-item">
+                                <button class="btn btn-primary" onclick="decodeFrame()" style="margin-top: 25px;">
+                                    <i class="fas fa-search"></i> Decode
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Decoding Results -->
+                        <div id="decoding-results" style="display: none;">
+                            <h4>Decoding Results:</h4>
+                            <div class="encoding-step">
+                                <h5>Step 1: Extract Bytes</h5>
+                                <div class="byte-display" id="extracted-bytes"></div>
+                            </div>
+                            <div class="encoding-step">
+                                <h5>Step 2: Hex to Raw Value</h5>
+                                <p id="hex-to-raw"></p>
+                            </div>
+                            <div class="encoding-step">
+                                <h5>Step 3: Raw to Physical Value</h5>
+                                <p>Physical = (Raw × Resolution) + Offset</p>
+                                <p id="raw-to-physical"></p>
+                            </div>
+                            <div class="encoding-step">
+                                <h5>Step 4: Final Result</h5>
+                                <p><strong>Physical Value:</strong> <span id="final-physical"></span></p>
+                                <p><strong>Raw Value:</strong> <span id="final-raw"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Tab -->
+        <div id="help" class="tab-content">
+            <div class="card">
+                <h2><i class="fas fa-question-circle"></i> Help & Documentation</h2>
+                <div class="help-sections">
+                    <div class="help-section">
+                        <h3><i class="fas fa-info-circle"></i> About J1939</h3>
+                        <p>SAE J1939 is a vehicle bus standard used for communication and diagnostics among vehicle components.</p>
+                        <ul>
+                            <li><strong>PGN (Parameter Group Number):</strong> Identifies the message type</li>
+                            <li><strong>SPN (Suspect Parameter Number):</strong> Identifies specific parameters within a PGN</li>
+                            <li><strong>Resolution:</strong> Physical units per bit</li>
+                            <li><strong>Offset:</strong> Physical value when raw value is 0</li>
+                            <li><strong>Transmission Rate:</strong> How often the signal is transmitted</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3><i class="fas fa-calculator"></i> Encoding Formula</h3>
+                        <div class="formula-box">
+                            <p><strong>Raw Value = (Physical Value - Offset) / Resolution</strong></p>
+                            <p><strong>Physical Value = (Raw Value × Resolution) + Offset</strong></p>
+                        </div>
+                        <p>Example: Engine Speed at 2000 rpm with resolution 0.125 rpm/bit:</p>
+                        <div style="background: #1a1a2e; padding: 15px; border-radius: 6px; border: 1px solid #0f3460; margin: 10px 0; font-family: monospace; color: #cccccc;">
+                            Raw = (2000 - 0) / 0.125 = 16000<br>
+                            Binary = 16000<sub>10</sub> = 0011111010000000<sub>2</sub><br>
+                            Hex = 0x3E80<br>
+                            Bytes = [0x80, 0x3E] (Little Endian)
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3><i class="fas fa-table"></i> Signal Specifications</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Signal</th>
+                                    <th>PGN (Hex)</th>
+                                    <th>SPN</th>
+                                    <th>Resolution</th>
+                                    <th>Offset</th>
+                                    <th>Range</th>
+                                    <th>Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Engine Speed</td>
+                                    <td>0xF004</td>
+                                    <td>190</td>
+                                    <td>0.125</td>
+                                    <td>0</td>
+                                    <td>0-8031.875</td>
+                                    <td>rpm</td>
+                                </tr>
+                                <tr>
+                                    <td>Vehicle Speed</td>
+                                    <td>0xFEF1</td>
+                                    <td>84</td>
+                                    <td>1/256</td>
+                                    <td>0</td>
+                                    <td>0-250.996</td>
+                                    <td>km/h</td>
+                                </tr>
+                                <tr>
+                                    <td>Cab Temperature</td>
+                                    <td>0xFEF5</td>
+                                    <td>170</td>
+                                    <td>0.03125</td>
+                                    <td>-273</td>
+                                    <td>-273-1735</td>
+                                    <td>°C</td>
+                                </tr>
+                                <tr>
+                                    <td>Driver Torque</td>
+                                    <td>0xF004</td>
+                                    <td>512</td>
+                                    <td>1.0</td>
+                                    <td>-125</td>
+                                    <td>-125-125</td>
+                                    <td>%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h3><i class="fas fa-lightbulb"></i> How to Use</h3>
+                        <ul>
+                            <li><strong>Encoding:</strong> Select a signal type, enter a physical value, click "Encode" to see the step-by-step conversion to J1939 CAN frame</li>
+                            <li><strong>Decoding:</strong> Select a signal type, enter CAN data in hex format, click "Decode" to convert back to physical value</li>
+                            <li><strong>Signal Information:</strong> Shows detailed SPN parameters when you select a signal</li>
+                            <li><strong>Byte Placement:</strong> Visual representation of where the signal data is placed in the 8-byte CAN frame</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>J1939 Signal Generator & Encoder/Decoder v2.0</p>
+                <p>SAE J1939 Standard Compliant | CAN 2.0B | 29-bit Identifier</p>
+                <p style="color: #e94560; font-size: 0.8rem; margin-top: 10px;">
+                    <i class="fas fa-code"></i> Developed for Automotive Embedded Systems
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let currentSignalConfig = null;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the first tab
+            switchTab('encoder-decoder');
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+                tab.classList.remove('fade-in');
+            });
+            
+            // Deactivate all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            const activeTab = document.getElementById(tabName);
+            activeTab.classList.add('active');
+            setTimeout(() => activeTab.classList.add('fade-in'), 10);
+            
+            // Activate selected tab button
+            document.querySelector(`.tab-button[onclick*="${tabName}"]`).classList.add('active');
+        }
+
+        // Encoding/Decoder tab switching
+        function switchEncodingTab(tabName) {
+            document.querySelectorAll('.encoding-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.encoding-content').forEach(content => {
+                content.classList.remove('active');
+                content.classList.remove('fade-in');
+            });
+            
+            document.querySelector(`.encoding-tab[onclick*="${tabName}"]`).classList.add('active');
+            const activeContent = document.getElementById(`${tabName}-content`);
+            activeContent.classList.add('active');
+            setTimeout(() => activeContent.classList.add('fade-in'), 10);
+        }
+
+        // Load signal details for encoder/decoder
+        function loadSignalDetails() {
+            const signalType = document.getElementById('signal-type').value;
+            const infoDiv = document.getElementById('signal-info');
+            const infoContent = document.getElementById('signal-info-content');
+            const physicalRange = document.getElementById('physical-range');
+            
+            if (!signalType) {
+                infoDiv.style.display = 'none';
+                return;
+            }
+            
+            const signals = {
+                engine_speed: {
+                    name: "Engine Speed",
+                    pgn: 61444,
+                    spn: 190,
+                    resolution: 0.125,
+                    offset: 0,
+                    unit: "rpm",
+                    min: 0,
+                    max: 8031.875,
+                    start_byte: 4,
+                    start_bit: 1,
+                    length_bits: 16
+                },
+                vehicle_speed: {
+                    name: "Vehicle Speed",
+                    pgn: 65265,
+                    spn: 84,
+                    resolution: 1/256,
+                    offset: 0,
+                    unit: "km/h",
+                    min: 0,
+                    max: 250.996,
+                    start_byte: 2,
+                    start_bit: 1,
+                    length_bits: 16
+                },
+                cab_temperature: {
+                    name: "Cab Temperature",
+                    pgn: 65269,
+                    spn: 170,
+                    resolution: 0.03125,
+                    offset: -273,
+                    unit: "°C",
+                    min: -273,
+                    max: 1735,
+                    start_byte: 2,
+                    start_bit: 1,
+                    length_bits: 16
+                },
+                driver_torque: {
+                    name: "Driver Torque",
+                    pgn: 61444,
+                    spn: 512,
+                    resolution: 1.0,
+                    offset: -125,
+                    unit: "%",
+                    min: -125,
+                    max: 125,
+                    start_byte: 2,
+                    start_bit: 1,
+                    length_bits: 8
+                }
+            };
+            
+            const signal = signals[signalType];
+            currentSignalConfig = signal;
+            
+            infoContent.innerHTML = `
+                <div class="spn-detail-item">
+                    <strong>${signal.name}</strong>
+                    <span>PGN: 0x${signal.pgn.toString(16).toUpperCase().padStart(4, '0')} (${signal.pgn})</span>
+                    <span>SPN: ${signal.spn}</span>
+                    <span>Resolution: ${signal.resolution} ${signal.unit}/bit</span>
+                    <span>Offset: ${signal.offset} ${signal.unit}</span>
+                    <span>Range: ${signal.min} to ${signal.max} ${signal.unit}</span>
+                    <span>Start Position: Byte ${signal.start_byte}, Bit ${signal.start_bit}</span>
+                    <span>Length: ${signal.length_bits} bits (${Math.ceil(signal.length_bits/8)} bytes)</span>
+                </div>
+            `;
+            
+            physicalRange.textContent = `Range: ${signal.min} to ${signal.max} ${signal.unit}`;
+            physicalRange.style.color = '#e94560';
+            infoDiv.style.display = 'block';
+            infoDiv.classList.add('fade-in');
+        }
+
+        // Encode physical value
+        async function encodeValue() {
+            const signalType = document.getElementById('signal-type').value;
+            const physicalValue = parseFloat(document.getElementById('physical-value').value);
+            
+            if (!signalType) {
+                showNotification('Please select a signal type', 'error');
+                return;
+            }
+            
+            if (isNaN(physicalValue)) {
+                showNotification('Please enter a valid physical value', 'error');
+                return;
+            }
+            
+            const signals = {
+                engine_speed: { 
+                    pgn: 61444, spn: 190, resolution: 0.125, offset: 0, unit: "rpm", 
+                    start_byte: 4, start_bit: 1, length_bits: 16 
+                },
+                vehicle_speed: { 
+                    pgn: 65265, spn: 84, resolution: 1/256, offset: 0, unit: "km/h", 
+                    start_byte: 2, start_bit: 1, length_bits: 16 
+                },
+                cab_temperature: { 
+                    pgn: 65269, spn: 170, resolution: 0.03125, offset: -273, unit: "°C", 
+                    start_byte: 2, start_bit: 1, length_bits: 16 
+                },
+                driver_torque: { 
+                    pgn: 61444, spn: 512, resolution: 1.0, offset: -125, unit: "%", 
+                    start_byte: 2, start_bit: 1, length_bits: 8 
+                }
+            };
+            
+            const spnConfig = signals[signalType];
+            
+            // Validate range
+            if (physicalValue < spnConfig.min || physicalValue > spnConfig.max) {
+                showNotification(`Value must be between ${spnConfig.min} and ${spnConfig.max} ${spnConfig.unit}`, 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/encode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        signal_id: signalType,
+                        physical_value: physicalValue
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayEncodingSteps(data, spnConfig);
+                    showNotification('Encoding successful!', 'success');
+                } else {
+                    showNotification('Error: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Encoding error:', error);
+                showNotification('Failed to encode value. Check console for details.', 'error');
+            }
+        }
+
+        // Display encoding steps
+        function displayEncodingSteps(data, spnConfig) {
+            const encodingSteps = document.getElementById('encoding-steps');
+            encodingSteps.style.display = 'block';
+            encodingSteps.classList.add('fade-in');
+            
+            // Step 1: Physical to Raw
+            const rawValue = data.raw_value;
+            const step1 = document.getElementById('step1-details');
+            step1.innerHTML = `
+                Raw = (${data.physical_value.toFixed(4)} ${spnConfig.unit} - ${spnConfig.offset}) / ${spnConfig.resolution}<br>
+                Raw = ${rawValue}<br>
+                <strong>Raw (Hex):</strong> ${data.raw_hex}<br>
+                <strong>Raw (Binary):</strong> ${data.raw_binary}
+            `;
+            
+            // Step 2: Raw to Binary
+            document.getElementById('step2-details').innerHTML = `
+                <strong>Binary:</strong> ${data.raw_binary} (${spnConfig.length_bits} bits)
+            `;
+            
+            // Step 3: Binary to Hex
+            document.getElementById('step3-details').innerHTML = `
+                <strong>Hexadecimal:</strong> ${data.raw_hex}
+            `;
+            
+            // Step 4: Byte Placement
+            const byteDisplay = document.getElementById('byte-placement');
+            byteDisplay.innerHTML = '';
+            
+            const dataArray = data.data_array;
+            const startByte = spnConfig.start_byte;
+            
+            for (let i = 0; i < 8; i++) {
+                const byteDiv = document.createElement('div');
+                byteDiv.className = 'byte';
+                byteDiv.textContent = dataArray[i].toString(16).toUpperCase().padStart(2, '0');
+                
+                if (i + 1 >= startByte && i < startByte + Math.ceil(spnConfig.length_bits/8)) {
+                    byteDiv.classList.add('highlighted');
+                }
+                
+                byteDisplay.appendChild(byteDiv);
+            }
+            
+            document.getElementById('byte-note').innerHTML = `
+                <i class="fas fa-info-circle"></i> Highlighted bytes contain SPN data (starting at byte ${startByte})
+            `;
+            
+            // Step 5: Final Frame
+            document.getElementById('final-can-id').innerHTML = `
+                <span style="color: #e94560; font-weight: bold;">${data.can_id_hex}</span>
+            `;
+            document.getElementById('final-data').innerHTML = `
+                <span style="color: #4CAF50; font-family: monospace;">${data.data_bytes}</span>
+            `;
+            document.getElementById('final-frame').innerHTML = `
+                <span style="color: #ffffff; background: #1a1a2e; padding: 5px 10px; border-radius: 4px; font-family: monospace;">
+                    ${data.can_id_hex}#${data.data_bytes}
+                </span>
+            `;
+            
+            // Scroll to results
+            encodingSteps.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Decode CAN frame
+        async function decodeFrame() {
+            const signalType = document.getElementById('signal-type').value;
+            let canData = document.getElementById('can-data').value.trim();
+            
+            if (!signalType) {
+                showNotification('Please select a signal type', 'error');
+                return;
+            }
+            
+            // Clean up input
+            canData = canData.replace(/0x/gi, '').replace(/\s/g, '');
+            
+            if (!canData || canData.length !== 16) {
+                showNotification('Please enter 16 hexadecimal characters (8 bytes)', 'error');
+                return;
+            }
+            
+            if (!/^[0-9A-Fa-f]{16}$/.test(canData)) {
+                showNotification('Invalid hexadecimal characters', 'error');
+                return;
+            }
+            
+            const signals = {
+                engine_speed: { 
+                    pgn: 61444, spn: 190, resolution: 0.125, offset: 0, unit: "rpm", 
+                    start_byte: 4, start_bit: 1, length_bits: 16 
+                },
+                vehicle_speed: { 
+                    pgn: 65265, spn: 84, resolution: 1/256, offset: 0, unit: "km/h", 
+                    start_byte: 2, start_bit: 1, length_bits: 16 
+                },
+                cab_temperature: { 
+                    pgn: 65269, spn: 170, resolution: 0.03125, offset: -273, unit: "°C", 
+                    start_byte: 2, start_bit: 1, length_bits: 16 
+                },
+                driver_torque: { 
+                    pgn: 61444, spn: 512, resolution: 1.0, offset: -125, unit: "%", 
+                    start_byte: 2, start_bit: 1, length_bits: 8 
+                }
+            };
+            
+            const spnConfig = signals[signalType];
+            
+            // Simulate decoding (since we don't have decode endpoint in backend)
+            simulateDecoding(spnConfig, canData);
+            showNotification('Decoding completed!', 'success');
+        }
+
+        // Simulate decoding
+        function simulateDecoding(spnConfig, canData) {
+            document.getElementById('decoding-results').style.display = 'block';
+            document.getElementById('decoding-results').classList.add('fade-in');
+            
+            // Step 1: Extract Bytes
+            const byteDisplay = document.getElementById('extracted-bytes');
+            byteDisplay.innerHTML = '';
+            
+            const bytes = canData.match(/.{1,2}/g);
+            const startByte = spnConfig.start_byte;
+            
+            bytes.forEach((byte, index) => {
+                const byteDiv = document.createElement('div');
+                byteDiv.className = 'byte';
+                byteDiv.textContent = byte.toUpperCase();
+                
+                if (index + 1 >= startByte && index < startByte + Math.ceil(spnConfig.length_bits/8)) {
+                    byteDiv.classList.add('highlighted');
+                }
+                
+                byteDisplay.appendChild(byteDiv);
+            });
+            
+            // Extract relevant bytes for calculation
+            const relevantBytes = bytes.slice(startByte - 1, startByte - 1 + Math.ceil(spnConfig.length_bits/8));
+            let rawValue = 0;
+            
+            // Calculate raw value from bytes (little endian)
+            for (let i = 0; i < relevantBytes.length; i++) {
+                rawValue += parseInt(relevantBytes[i], 16) << (8 * i);
+            }
+            
+            // Mask to length_bits
+            const mask = (1 << spnConfig.length_bits) - 1;
+            rawValue = rawValue & mask;
+            
+            // Calculate physical value
+            const physicalValue = (rawValue * spnConfig.resolution) + spnConfig.offset;
+            
+            document.getElementById('hex-to-raw').innerHTML = `
+                <strong>Extracted Bytes:</strong> ${relevantBytes.join(' ').toUpperCase()}<br>
+                <strong>Raw (Hex):</strong> 0x${rawValue.toString(16).toUpperCase()}<br>
+                <strong>Raw (Decimal):</strong> ${rawValue}<br>
+                <strong>Raw (Binary):</strong> ${rawValue.toString(2).padStart(spnConfig.length_bits, '0')}
+            `;
+            
+            document.getElementById('raw-to-physical').innerHTML = `
+                Physical = (${rawValue} × ${spnConfig.resolution}) + ${spnConfig.offset}<br>
+                Physical = ${physicalValue.toFixed(4)} ${spnConfig.unit}
+            `;
+            
+            document.getElementById('final-physical').innerHTML = `
+                <span style="color: #e94560; font-size: 1.2rem; font-weight: bold;">
+                    ${physicalValue.toFixed(4)} ${spnConfig.unit}
+                </span>
+            `;
+            document.getElementById('final-raw').innerHTML = `
+                ${rawValue} (0x${rawValue.toString(16).toUpperCase()})
+            `;
+            
+            // Scroll to results
+            document.getElementById('decoding-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            // Remove existing notification
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = `notification fade-in`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                z-index: 1000;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                animation: fadeIn 0.3s ease-out;
+            `;
+            
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+            notification.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100px)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add CSS animation for notification
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateX(100px); }
+                to { opacity: 1; transform: translateX(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
